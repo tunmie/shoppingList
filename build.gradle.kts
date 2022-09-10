@@ -83,3 +83,16 @@ tasks.named<JavaExec>("run") {
 	dependsOn(tasks.named<Jar>("jvmJar"))
 	classpath(tasks.named<Jar>("jvmJar"))
 }
+
+tasks.getByName<Jar>("jvmJar"){
+	val taskName = if(project.hasProperty("isProduction")
+		|| project.gradle.startParameter.taskNames.contains("installDict")
+	) {
+		"jsBrowserProductionWebpack"
+	} else {
+		"jsBrowserDevelopmentWebpack"
+	}
+	val webpackTask = tasks.getByName<org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack>(taskName)
+	dependsOn(webpackTask) // make sure JS gets compiled first
+	from(File(webpackTask.destinationDirectory, webpackTask.outputFileName)) // bring output file along into the JAR
+}
